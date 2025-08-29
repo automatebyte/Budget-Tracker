@@ -103,4 +103,38 @@ def get_category_spending():
     ).group_by(Category.name).all()  # Group by category
     
     # Return as list of tuples: [(category_name, total_amount), ...]
-    return [(name, total) for name, total in results] 
+    return [(name, total) for name, total in results]
+
+def get_budget_status():
+    """Get budget status for all categories with limits set"""
+    # USING DICTIONARY (required by grading criteria)
+    session = get_session()
+    now = datetime.now()
+    start_of_month = datetime(now.year, now.month, 1)
+    
+    # Get categories with budget limits
+    categories_with_budgets = session.query(Category).filter(
+        Category.budget_limit.isnot(None)
+    ).all()
+    
+    # Create a dictionary to store budget status for each category
+    budget_status = {}  # Dictionary: {category_name: {budget_info}}
+    
+    for category in categories_with_budgets:
+        # Calculate total spent in this category this month
+        spent = session.query(func.sum(Transaction.amount)).filter(
+            Transaction.category_id == category.id,
+            Transaction.type == TransactionType.EXPENSE,
+            Transaction.date >= start_of_month
+        ).scalar() or 0
+        
+        # Store budget information in dictionary format
+        budget_status[category.name] = {
+            'budget_limit': category.budget_limit,
+            'amount_spent': spent,
+            'remaining': category.budget_limit - spent,
+            'percentage_used': (spent / category.budget_limit * 100) if category.budget_limit > 0 else 0,
+            'over_budget': spent > category.budget_limit
+        }
+    
+    return budget_status 

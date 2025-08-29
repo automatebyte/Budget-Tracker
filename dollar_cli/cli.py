@@ -92,6 +92,38 @@ def budget(category, limit):
     except Exception as e:
         click.echo(f" Error: {str(e)}")
 
+@cli.command()
+def budget_status():
+    """Show budget status for all categories with limits"""
+    try:
+        # Import the new function
+        from .helpers import get_budget_status
+        
+        # Get budget status (returns a dictionary)
+        status_dict = get_budget_status()
+        
+        if not status_dict:
+            click.echo("No budget limits set. Use 'dollar budget' to set limits!")
+            return
+            
+        click.echo("\n=== Budget Status ===")
+        
+        # Iterate through the dictionary to show each category's status
+        for category_name, budget_info in status_dict.items():
+            emoji = "🚨" if budget_info['over_budget'] else "✅"
+            
+            click.echo(f"\n{emoji} {category_name}:")
+            click.echo(f"   Budget: ${budget_info['budget_limit']:.2f}")
+            click.echo(f"   Spent:  ${budget_info['amount_spent']:.2f}")
+            click.echo(f"   Left:   ${budget_info['remaining']:.2f}")
+            click.echo(f"   Used:   {budget_info['percentage_used']:.1f}%")
+            
+            if budget_info['over_budget']:
+                click.echo("   ⚠️  Over budget!")
+                
+    except Exception as e:
+        click.echo(f" Error: {str(e)}")
+
 # This makes the CLI work when run directly
 if __name__ == '__main__':
     cli()
