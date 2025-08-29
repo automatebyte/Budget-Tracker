@@ -103,4 +103,4 @@ def get_category_spending():
     ).group_by(Category.name).all()  # Group by category
     
     # Return as list of tuples: [(category_name, total_amount), ...]
-    return [(name, total) for name, total in results]
+    return [(name, total) for name, total in results] 
